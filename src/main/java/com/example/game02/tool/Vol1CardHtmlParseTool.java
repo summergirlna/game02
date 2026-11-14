@@ -7,13 +7,20 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import tools.jackson.databind.ObjectMapper;
+
 
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Vol1CardHtmlParseTool {
 
     private static final Path VOL1_HTML_PATH = Path.of("tmp", "vol1.html");
+    private static final Path OUTPUT_JSON_PATH = Path.of("src", "main", "resources", "data", "vol1-cards.json");
+
 
     public static void main(String[] args) throws Exception {
         Document document = Jsoup.parse(VOL1_HTML_PATH, StandardCharsets.UTF_8.name());
@@ -22,62 +29,98 @@ public class Vol1CardHtmlParseTool {
 
         System.out.println("cards: " + rows.size());
 
+        List<Vol1CardData> cards = new ArrayList<>();
+
         for (int i = 0; i < rows.size(); i++) {
             Element row = rows.get(i);
 
-            String cid = textOrValue(row, ".cid", true);
-            String name = textOrValue(row, ".card_name", false);
-            String ruby = textOrValue(row, ".card_ruby", false);
-            String attributeOrType = textOrValue(row, ".box_card_attribute span", false);
-            String levelText = textOrValue(row, ".box_card_level_rank span", false);
-            String speciesText = textOrValue(row, ".card_info_species_and_other_item span", false);
-            String attackText = textOrValue(row, ".atk_power span", false);
-            String defenseText = textOrValue(row, ".def_power span", false);
-            String description = textOrValue(row, ".box_card_text", false);
-            String rarity = textOrValue(row, ".lr_icon p", false);
-            String rarityName = textOrValue(row, ".lr_icon span", false);
+            Vol1CardData card = parseCard(row);
+            cards.add(card);
 
-            if (isMonster(attributeOrType)) {
-                Attribute attribute = Attribute.fromJapaneseName(attributeOrType);
-                int level = OfficialCardTextParser.parseLevel(levelText);
-                String raceName = OfficialCardTextParser.parseMonsterRaceName(speciesText);
-                String monsterKindName = OfficialCardTextParser.parseMonsterKindName(speciesText);
-                MonsterRace race = MonsterRace.fromJapaneseName(raceName);
-                int attack = OfficialCardTextParser.parseAttack(attackText);
-                int defense = OfficialCardTextParser.parseDefense(defenseText);
-
-                System.out.printf(
-                        "%02d MONSTER cid=%s name=%s ruby=%s attribute=%s level=%d race=%s kind=%s atk=%d def=%d rarity=%s rarityName=%s text=%s%n",
-                        i + 1,
-                        cid,
-                        name,
-                        ruby,
-                        attribute,
-                        level,
-                        race,
-                        monsterKindName,
-                        attack,
-                        defense,
-                        rarity,
-                        rarityName,
-                        description
-                );
-            } else {
-                CardType cardType = CardType.fromJapaneseName(attributeOrType);
-
-                System.out.printf(
-                        "%02d %s cid=%s name=%s ruby=%s rarity=%s rarityName=%s text=%s%n",
-                        i + 1,
-                        cardType,
-                        cid,
-                        name,
-                        ruby,
-                        rarity,
-                        rarityName,
-                        description
-                );
-            }
+            System.out.printf(
+                    "%02d %s cid=%s name=%s rarity=%s%n",
+                    i + 1,
+                    card.cardType(),
+                    card.cid(),
+                    card.name(),
+                    card.rarity()
+            );
         }
+
+        writeJson(cards);
+
+        System.out.println("Saved: " + OUTPUT_JSON_PATH.toAbsolutePath());
+    }
+
+    private static Vol1CardData parseCard(Element row) {
+        String cid = textOrValue(row, ".cid", true);
+        String name = textOrValue(row, ".card_name", false);
+        String ruby = textOrValue(row, ".card_ruby", false);
+        String attributeOrType = textOrValue(row, ".box_card_attribute span", false);
+        String levelText = textOrValue(row, ".box_card_level_rank span", false);
+        String speciesText = textOrValue(row, ".card_info_species_and_other_item span", false);
+        String attackText = textOrValue(row, ".atk_power span", false);
+        String defenseText = textOrValue(row, ".def_power span", false);
+        String description = textOrValue(row, ".box_card_text", false);
+        String rarity = textOrValue(row, ".lr_icon p", false);
+        String rarityName = textOrValue(row, ".lr_icon span", false);
+
+        String id = "vol1-" + cid;
+
+        if (isMonster(attributeOrType)) {
+            Attribute attribute = Attribute.fromJapaneseName(attributeOrType);
+            int level = OfficialCardTextParser.parseLevel(levelText);
+            String raceName = OfficialCardTextParser.parseMonsterRaceName(speciesText);
+            String monsterKindName = OfficialCardTextParser.parseMonsterKindName(speciesText);
+            MonsterRace race = MonsterRace.fromJapaneseName(raceName);
+            int attack = OfficialCardTextParser.parseAttack(attackText);
+            int defense = OfficialCardTextParser.parseDefense(defenseText);
+
+            return new Vol1CardData(
+                    id,
+                    cid,
+                    name,
+                    ruby,
+                    CardType.MONSTER,
+                    attribute,
+                    level,
+                    race,
+                    monsterKindName,
+                    attack,
+                    defense,
+                    description,
+                    rarity,
+                    rarityName
+            );
+        }
+
+        CardType cardType = CardType.fromJapaneseName(attributeOrType);
+
+        return new Vol1CardData(
+                id,
+                cid,
+                name,
+                ruby,
+                cardType,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                description,
+                rarity,
+                rarityName
+        );
+
+    }
+
+    private static void writeJson(List<Vol1CardData> cards) throws Exception {
+        Files.createDirectories(OUTPUT_JSON_PATH.getParent());
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.writerWithDefaultPrettyPrinter()
+                .writeValue(OUTPUT_JSON_PATH.toFile(), cards);
     }
 
     private static boolean isMonster(String attributeOrType) {
