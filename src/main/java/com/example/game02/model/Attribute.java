@@ -11,7 +11,7 @@ public enum Attribute implements JapaneseNamed {
     LIGHT("光属性"),
     EARTH("地属性"),
     WATER("水属性"),
-    FIRE("火属性"),
+    FIRE("炎属性"),
     WIND("風属性");
 
     private final String japaneseName;

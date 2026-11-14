@@ -1,5 +1,8 @@
 package com.example.game02.tool;
 
+import com.example.game02.model.Attribute;
+import com.example.game02.model.CardType;
+import com.example.game02.model.MonsterRace;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -22,65 +25,76 @@ public class Vol1CardHtmlParseTool {
         for (int i = 0; i < rows.size(); i++) {
             Element row = rows.get(i);
 
-            String cid = row.selectFirst(".cid") != null
-                    ? row.selectFirst(".cid").attr("value").trim()
-                    : "";
+            String cid = textOrValue(row, ".cid", true);
+            String name = textOrValue(row, ".card_name", false);
+            String ruby = textOrValue(row, ".card_ruby", false);
+            String attributeOrType = textOrValue(row, ".box_card_attribute span", false);
+            String levelText = textOrValue(row, ".box_card_level_rank span", false);
+            String speciesText = textOrValue(row, ".card_info_species_and_other_item span", false);
+            String attackText = textOrValue(row, ".atk_power span", false);
+            String defenseText = textOrValue(row, ".def_power span", false);
+            String description = textOrValue(row, ".box_card_text", false);
+            String rarity = textOrValue(row, ".lr_icon p", false);
+            String rarityName = textOrValue(row, ".lr_icon span", false);
 
-            String name = row.selectFirst(".card_name") != null
-                    ? row.selectFirst(".card_name").text().trim()
-                    : "";
+            if (isMonster(attributeOrType)) {
+                Attribute attribute = Attribute.fromJapaneseName(attributeOrType);
+                int level = OfficialCardTextParser.parseLevel(levelText);
+                String raceName = OfficialCardTextParser.parseMonsterRaceName(speciesText);
+                String monsterKindName = OfficialCardTextParser.parseMonsterKindName(speciesText);
+                MonsterRace race = MonsterRace.fromJapaneseName(raceName);
+                int attack = OfficialCardTextParser.parseAttack(attackText);
+                int defense = OfficialCardTextParser.parseDefense(defenseText);
 
-            String ruby = row.selectFirst(".card_ruby") != null
-                    ? row.selectFirst(".card_ruby").text().trim()
-                    : "";
+                System.out.printf(
+                        "%02d MONSTER cid=%s name=%s ruby=%s attribute=%s level=%d race=%s kind=%s atk=%d def=%d rarity=%s rarityName=%s text=%s%n",
+                        i + 1,
+                        cid,
+                        name,
+                        ruby,
+                        attribute,
+                        level,
+                        race,
+                        monsterKindName,
+                        attack,
+                        defense,
+                        rarity,
+                        rarityName,
+                        description
+                );
+            } else {
+                CardType cardType = CardType.fromJapaneseName(attributeOrType);
 
-            String attributeOrType = row.selectFirst(".box_card_attribute span") != null
-                    ? row.selectFirst(".box_card_attribute span").text().trim()
-                    : "";
-
-            String levelText = row.selectFirst(".box_card_level_rank span") != null
-                    ? row.selectFirst(".box_card_level_rank span").text().trim()
-                    : "";
-
-            String speciesText = row.selectFirst(".card_info_species_and_other_item span") != null
-                    ? row.selectFirst(".card_info_species_and_other_item span").text().trim()
-                    : "";
-
-            String attackText = row.selectFirst(".atk_power span") != null
-                    ? row.selectFirst(".atk_power span").text().trim()
-                    : "";
-
-            String defenseText = row.selectFirst(".def_power span") != null
-                    ? row.selectFirst(".def_power span").text().trim()
-                    : "";
-
-            String description = row.selectFirst(".box_card_text") != null
-                    ? row.selectFirst(".box_card_text").text().trim()
-                    : "";
-
-            String rarity = row.selectFirst(".lr_icon p") != null
-                    ? row.selectFirst(".lr_icon p").text().trim()
-                    : "";
-
-            String rarityName = row.selectFirst(".lr_icon span") != null
-                    ? row.selectFirst(".lr_icon span").text().trim()
-                    : "";
-
-            System.out.printf(
-                    "%02d cid=%s name=%s ruby=%s type=%s level=%s species=%s atk=%s def=%s rarity=%s rarityName=%s text=%s%n",
-                    i + 1,
-                    cid,
-                    name,
-                    ruby,
-                    attributeOrType,
-                    levelText,
-                    speciesText,
-                    attackText,
-                    defenseText,
-                    rarity,
-                    rarityName,
-                    description
-            );
+                System.out.printf(
+                        "%02d %s cid=%s name=%s ruby=%s rarity=%s rarityName=%s text=%s%n",
+                        i + 1,
+                        cardType,
+                        cid,
+                        name,
+                        ruby,
+                        rarity,
+                        rarityName,
+                        description
+                );
+            }
         }
+    }
+
+    private static boolean isMonster(String attributeOrType) {
+        return !"魔法".equals(attributeOrType) && !"罠".equals(attributeOrType);
+    }
+
+    private static String textOrValue(Element row, String selector, boolean value) {
+        Element element = row.selectFirst(selector);
+
+        if (element == null) {
+            return "";
+        }
+
+        if (value) {
+            return element.attr("value").trim();
+        }
+
+        return element.text().trim();
     }
 }
