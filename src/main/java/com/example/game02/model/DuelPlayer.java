@@ -35,7 +35,7 @@ public class DuelPlayer implements Serializable {
 
   /// モンスターゾーンが空かどうか
   ///
-  /// @return モンスターゾンーが空の場合はtrue
+  /// @return モンスターゾーンが空の場合はtrue
   public boolean hasEmptyMonsterZone() {
     return monsterZones.stream().anyMatch(Objects::isNull);
   }
