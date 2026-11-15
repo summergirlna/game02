@@ -8,10 +8,9 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 public class MonsterCard extends Card {
 
-  private final int level;
+  private final Level level;
   private final Attribute attribute;
   private final MonsterRace race;
   private final CardPower attack;
   private final CardPower defense;
-
 }
