@@ -5,16 +5,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import lombok.Getter;
-import lombok.Setter;
 
 /// デュエル中のプレイヤーの定義
 @Getter
-@Setter
 public class DuelPlayer implements Serializable {
 
   public static final int MONSTER_ZONE_SIZE = 5;
 
-  private int lifePoints;
+  private LifePoint lifePoint;
   private final List<Card> deck;
   private final List<Card> hand;
   private final List<Card> graveyard;
@@ -22,7 +20,7 @@ public class DuelPlayer implements Serializable {
   private boolean normalSummonedThisTurn;
 
   public DuelPlayer(List<Card> deck) {
-    this.lifePoints = 8000;
+    this.lifePoint = LifePoint.INITIAL;
     this.deck = new ArrayList<>(deck);
     this.hand = new ArrayList<>();
     this.graveyard = new ArrayList<>();
@@ -50,5 +48,21 @@ public class DuelPlayer implements Serializable {
         monster.setAttackedThisTurn(false);
       }
     }
+  }
+
+  public void markNormalSummoned() {
+    this.normalSummonedThisTurn = true;
+  }
+
+  public void damage(int amount) {
+    this.lifePoint = this.lifePoint.damage(amount);
+  }
+
+  public void heal(int amount) {
+    this.lifePoint = this.lifePoint.heal(amount);
+  }
+
+  public boolean isDefeated() {
+    return this.lifePoint.isZero();
   }
 }
