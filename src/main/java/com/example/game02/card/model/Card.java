@@ -1,4 +1,4 @@
-package com.example.game02.model;
+package com.example.game02.card.model;
 
 import java.io.Serializable;
 import lombok.Getter;

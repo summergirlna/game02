@@ -1,4 +1,4 @@
-package com.example.game02.model;
+package com.example.game02.card.model;
 
 public record Level(int value) implements Comparable<Level> {
 

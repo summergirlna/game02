@@ -1,4 +1,4 @@
-package com.example.game02.model;
+package com.example.game02.duel.model;
 
 public record LifePoint(int value) {
 

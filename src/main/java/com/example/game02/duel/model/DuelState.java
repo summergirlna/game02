@@ -1,4 +1,4 @@
-package com.example.game02.model;
+package com.example.game02.duel.model;
 
 import java.util.ArrayList;
 import java.util.List;

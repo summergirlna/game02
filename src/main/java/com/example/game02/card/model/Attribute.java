@@ -1,4 +1,4 @@
-package com.example.game02.model;
+package com.example.game02.card.model;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

@@ -1,8 +1,8 @@
 package com.example.game02.tool;
 
-import com.example.game02.model.Attribute;
-import com.example.game02.model.CardType;
-import com.example.game02.model.MonsterRace;
+import com.example.game02.card.model.Attribute;
+import com.example.game02.card.model.CardType;
+import com.example.game02.card.model.MonsterRace;
 
 public record Vol1CardData(
     String id,

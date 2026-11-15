@@ -1,5 +1,6 @@
-package com.example.game02.model;
+package com.example.game02.duel.model;
 
+import com.example.game02.card.model.Card;
 import java.io.Serializable;
 import java.util.List;
 import lombok.Getter;
